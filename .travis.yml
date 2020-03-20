@@ -6,7 +6,7 @@ before_install:
         - export DEBIAN_FRONTEND=noninteractive
 
 install:
-        - sudo apt-get update && sudo apt-get install -y --no-install-recommends git ninja-build gperf ccache dfu-util device-tree-compiler wget python python-pip python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib locales tar curl unzip gnupg ca-certificates
+        - sudo apt-get update && sudo apt-get install -y --no-install-recommends git ninja-build gperf ccache dfu-util device-tree-compiler wget python python-pip python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib locales tar curl unzip gnupg ca-certificates zip
         - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
         - echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
         - sudo apt update
@@ -36,3 +36,18 @@ script:
         - make -f tensorflow/lite/micro/tools/make/Makefile TARGET=zephyr_vexriscv magic_wand_bin -j$(nproc)
         - cd ${ROOT}
         - renode-test renode/litex-vexriscv-tflite.robot
+        - mkdir -p ${ROOT}/release/magic_wand
+        - mkdir -p ${ROOT}/release/hello_world
+        - cp ${ROOT}/tensorflow/tensorflow/lite/micro/tools/make/gen/zephyr_vexriscv_x86_64/hello_world/CMake/zephyr/zephyr.elf ${ROOT}/release/hello_world
+        - cp ${ROOT}/tensorflow/tensorflow/lite/micro/tools/make/gen/zephyr_vexriscv_x86_64/hello_world/CMake/zephyr/zephyr.bin ${ROOT}/release/hello_world
+        - cp ${ROOT}/tensorflow/tensorflow/lite/micro/tools/make/gen/zephyr_vexriscv_x86_64/magic_wand/CMake/zephyr/zephyr.elf ${ROOT}/release/magic_wand
+        - cp ${ROOT}/tensorflow/tensorflow/lite/micro/tools/make/gen/zephyr_vexriscv_x86_64/magic_wand/CMake/zephyr/zephyr.bin ${ROOT}/release/magic_wand
+        - tar -acf ${ROOT}/binaries.tar.gz ${ROOT}/release/*
+deploy:
+        provider: releases
+        api_key:
+                secure: $GITHUB_API_KEY
+        file: binaries.tar.gz
+        on:
+                repo: antmicro/litex-vexriscv-tensorflow-lite-demo
+                branch: travis-releases
