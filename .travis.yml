@@ -49,4 +49,5 @@ deploy:
                 secure: $GITHUB_API_KEY
         file: binaries.tar.gz
         on:
+                tags: true
                 repo: antmicro/litex-vexriscv-tensorflow-lite-demo
